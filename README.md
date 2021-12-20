@@ -12,6 +12,8 @@ In order to run the application you must simply migrate to the correct parent di
 google_book_api), then execute the following command replacing XXXX with the desired input:
 >python book_finder.py XXXX
 
+ex) python book_finder.py food
+
  This will cause the program to run, executing queries with the topic passed in as a parameter
 
 Design Decisions
