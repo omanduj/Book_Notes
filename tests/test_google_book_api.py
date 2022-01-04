@@ -11,3 +11,6 @@ def test_result_amount():
 def test_get_books():
     assert get_books('saddasdwsaddasdw') == None
     assert get_books('') == None
+    assert get_books(1) != None
+    assert get_books('Google') != None
+    assert get_books(' ') == None
