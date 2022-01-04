@@ -190,7 +190,7 @@ def main(query: str):
                 get_reading_list()
             except:
                 print("No Books Found")
-                return -1
+                
 
 
 if __name__ == "__main__":
