@@ -13,50 +13,68 @@ class Book:
         self.publisher = publisher
 
 
-def create_query(query_name: str):
+def get_books(query_name: str):
     """Purpose: To create a query with the given subject provided by user, limiting results by 5
     Paramaters: query_name = String of subject to be searched for
     Return Value: data = A list of books matching the query
     """
-    response = requests.get(
-        "https://books.googleapis.com/books/v1/volumes?q={}&maxResults=5&fields=items(volumeInfo/authors,volumeInfo/title,volumeInfo/publisher)".format(
-            query_name
+    if query_name != None:
+        response = requests.get(
+            "https://books.googleapis.com/books/v1/volumes?q={}&maxResults=5&fields=items(volumeInfo/authors,volumeInfo/title,volumeInfo/publisher)".format(
+                query_name
+            )
         )
-    )
-    data = response.json()["items"]
-    return data
+
+        try:
+            data = response.json()["items"]
+            return data
+        except:
+            print("No Books Found")
+    else:
+        return "Please input valid query string"
 
 
-def clean_data(query_info: dict):
+def format_info(query_info: dict):
     """Purpose: To clean data for ease of future use
     Paramaters: query_info = A list of dictionaries, each containing information on a book
     Return Value: query_dict = A dictionary containing Book objects
     """
     query_dict = {}
-    for book in range(len(query_info)):
-        book_info = query_info[book]["volumeInfo"]
-        book_title = book_info["title"].lower()
-        query_dict[book_title] = Book(
-            book_info["title"], book_info["authors"], book_info["publisher"]
-        )
-    return query_dict
+    count = 0
+    if query_info != None:
+        for book in range(len(query_info)):
+            count += 1
+            book_info = query_info[book]["volumeInfo"]
+            book_title = book_info["title"].lower()
+            try:
+                query_dict[count] = Book(
+                    book_info["title"], book_info["authors"], book_info["publisher"]
+                )
+            except:
+                query_dict[count] = Book(
+                    book_info["title"], book_info["authors"], "N/a"
+                )
+        return query_dict
+    return
 
 
-def format_info(all_book_info: dict):
+def parse_info(all_book_info: dict):
     """Purpose: To grammatically fix book information if there are 2+ authors
     Paramaters: all_book_info = A dictionary of book objects
     Return Value: all_book_info = A dictionary of book objects whose author value is grammatically correct
     """
-    for book_info in all_book_info.values():
-        if len(book_info.authors) >= 2:
-            authors = ""
-            for author in book_info.authors:
-                if author != book_info.authors[-1]:
-                    authors += author + " and "
-                if author == book_info.authors[-1]:
-                    authors += author
-            book_info.authors = [authors]
-    return all_book_info
+    if all_book_info != None:
+        for book_info in all_book_info.values():
+            if len(book_info.authors) >= 2:
+                authors = ""
+                for author in book_info.authors:
+                    if author != book_info.authors[-1]:
+                        authors += author + " and "
+                    if author == book_info.authors[-1]:
+                        authors += author
+                book_info.authors = [authors]
+        return all_book_info
+    return None
 
 
 def print_options(all_book_info: dict):
@@ -64,19 +82,21 @@ def print_options(all_book_info: dict):
     Paramaters: all_book_info = A dictionary of book objects
     Return Value: N/a
     """
-    for book_info in all_book_info.values():
-        author = book_info.authors[0]
-        print(
-            "Book Name:",
-            book_info.name,
-            "|",
-            "Author(s):",
-            author,
-            "|",
-            "Publisher:",
-            book_info.publisher,
-            "\n",
-        )
+    if all_book_info != None:
+        for number, book_info in all_book_info.items():
+            author = book_info.authors[0]
+            print(
+                number,
+                ") Name: ",
+                book_info.name,
+                "|",
+                "Author(s):",
+                author,
+                "|",
+                "Publisher:",
+                book_info.publisher,
+                "\n",
+            )
 
 
 def pick_book(all_book_info: dict):
@@ -85,8 +105,7 @@ def pick_book(all_book_info: dict):
     Return Value: wanted_book = If input is valid, it will return the book desired by user
                     -1 = If the input is not valid
     """
-    search_book = input("Insert desired book title: ")
-    search_book = search_book.lower()
+    search_book = int(input("Insert desired book title: "))
     if search_book in all_book_info.keys():
         wanted_book = all_book_info[search_book]
         return wanted_book
@@ -119,7 +138,7 @@ def insert_reading_list(wanted_book: object):
             print("Book inserted!")
 
 
-def reading_list():
+def get_reading_list():
     """Purpose: To show all books in the users book list
     Paramaters: N/a
     Return Value: my_books = A list of all books in the users book list
@@ -149,14 +168,29 @@ def main(query: str):
     Paramaters: query = A string that user inputs as query
     Return Value: N/a
     """
-    query_info = create_query(query)
-    all_book_info = clean_data(query_info)
-    all_book_info = format_info(all_book_info)
-    print_options(all_book_info)
-    wanted_book = pick_book(all_book_info)
-    if wanted_book != -1:
-        insert_reading_list(wanted_book)
-    my_books = reading_list()
+    val = 0
+    while val <= 2:
+        val = int(
+            input(
+                "Press 1 to add a book | 2 to read current book list | Any other button to exit: "
+            )
+        )
+        if val == 1:
+            query_info = get_books(query)
+            all_book_info = format_info(query_info)
+            all_book_info = parse_info(all_book_info)
+            books = print_options(all_book_info)
+            if all_book_info != None:
+                wanted_book = pick_book(all_book_info)
+                if wanted_book != -1:
+                    insert_reading_list(wanted_book)
+                my_books = get_reading_list()
+        if val == 2:
+            try:
+                get_reading_list()
+            except:
+                print("No Books Found")
+                return -1
 
 
 if __name__ == "__main__":
